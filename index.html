@@ -40,6 +40,7 @@
         .font-black { font-weight: 900; }
         .italic { font-style: italic; }
         
+        /* Personalización de scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f2f0f0; }
         ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
@@ -51,6 +52,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Estilo Botones Home */
         .btn-home-pill {
             background-color: #000000;
             color: #ffffff;
@@ -74,6 +76,7 @@
         }
         .btn-home-pill:active { transform: scale(0.96); }
 
+        /* Estilos Punto B Integration */
         .urbanist { font-family: 'Urbanist', sans-serif; }
         .main-card-pb {
             background-color: var(--surface);
@@ -109,7 +112,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- 3. IMPLEMENTACIÓN: INICIALIZACIÓN DE FIREBASE ---
+        // --- IMPLEMENTACIÓN: FIREBASE CONFIG (TUS CLAVES) ---
         const firebaseConfig = {
             apiKey: "AIzaSyBgVAAYURCEGdqNya8sizkV7ruL18zu10g",
             authDomain: "livohub-e1cap.firebaseapp.com",
@@ -151,22 +154,22 @@
 
             const [currentView, setCurrentView] = useState('home');
 
-            // --- 4. IMPLEMENTACIÓN: SINCRONIZACIÓN NUBE (En lugar de localStorage) ---
+            // --- ESTADOS (SINCRONIZADOS CON NUBE) ---
             const [canales, setCanales] = useState([]);
             const [ideasGenerales, setIdeasGenerales] = useState([]);
-            const [registrosPuntoB, setRegistrosPuntoB] = useState([]);
-            
             const [activeIdeaTab, setActiveIdeaTab] = useState('captacion');
             const [filtroCanalDestino, setFiltroCanalDestino] = useState('Todos');
             const [showModalIdea, setShowModalIdea] = useState(false);
             const [showModalCanal, setShowModalCanal] = useState(false);
+
+            const [registrosPuntoB, setRegistrosPuntoB] = useState([]);
             const [showModalPBRapido, setShowModalPBRapido] = useState(false);
             const [showModalPBDesarrollo, setShowModalPBDesarrollo] = useState(false);
             const [showModalPBNotas, setShowModalPBNotas] = useState(false);
             const [editItem, setEditItem] = useState(null);
             const [notaActiva, setNotaActiva] = useState({ id: null, titulo: '', contenido: '' });
 
-            // Escucha en tiempo real de Firestore
+            // --- IMPLEMENTACIÓN: ESCUCHA REAL-TIME (FIREBASE) ---
             useEffect(() => {
                 const unsubCanales = db.collection("canales").onSnapshot(snap => {
                     setCanales(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -180,7 +183,7 @@
                 return () => { unsubCanales(); unsubIdeas(); unsubRadar(); };
             }, []);
 
-            // --- FUNCIONES IDEA HUB (CONEXIÓN NUBE) ---
+            // --- FUNCIONES (ACTUALIZADAS PARA FIREBASE) ---
             const agregarCanal = async (e) => {
                 e.preventDefault();
                 const nombre = e.target.nuevoCanal.value.trim().toUpperCase();
@@ -193,6 +196,7 @@
             const eliminarCanal = async (id, nombre) => {
                 if (confirm(`¿Eliminar el canal "${nombre}"?`)) {
                     await db.collection("canales").doc(id).delete();
+                    if (filtroCanalDestino === nombre) setFiltroCanalDestino('Todos');
                 }
             };
 
@@ -223,7 +227,6 @@
                 }
             };
 
-            // --- FUNCIONES PUNTO B (CONEXIÓN NUBE) ---
             const registrarPBRapido = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -251,7 +254,7 @@
                 setShowModalPBDesarrollo(false);
             };
 
-            // Vistas (Home, Idea Hub, Radar) - Mismas que tu código original
+            // --- VISTA HOME (IDÉNTICA) ---
             if (currentView === 'home') {
                 return (
                     <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
@@ -269,6 +272,7 @@
                 );
             }
 
+            // --- VISTA IDEA HUB (IDÉNTICA) ---
             if (currentView === 'idea-hub') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
@@ -339,6 +343,7 @@
                                                             </td>
                                                         </tr>
                                                     ))}
+                                                    {ideasGenerales.length === 0 && <tr><td colSpan="5" className="py-20 text-center opacity-10 font-black uppercase text-xs">Sin ideas registradas</td></tr>}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -348,7 +353,9 @@
 
                             {activeIdeaTab === 'gestion' && (
                                 <section className="space-y-10 animate-fade-in">
-                                    {canales.map(canal => {
+                                    {canales.length === 0 ? (
+                                        <div className="text-center py-20 opacity-20 font-black uppercase italic">Crea canales en configuración primero</div>
+                                    ) : canales.map(canal => {
                                         const ideasCanal = ideasGenerales.filter(i => i.canalDestino === canal.nombre);
                                         return (
                                             <div key={canal.id} className="bg-[#d9d9d9] rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-sm">
@@ -373,16 +380,20 @@
                                                                 <tr key={idea.id} className="hover:bg-gray-50/50 transition-colors">
                                                                     <td className="px-8 py-5 font-bold text-gray-900 text-sm uppercase italic">{idea.titulo}</td>
                                                                     <td className="px-4 py-5 text-center">
-                                                                        <select value={idea.prioridad} onChange={(e) => updateIdea(idea.id, 'prioridad', e.target.value)} className="bg-gray-100 text-black font-black text-[10px] px-4 py-2 rounded-full uppercase outline-none">
+                                                                        <select 
+                                                                            value={idea.prioridad} 
+                                                                            onChange={(e) => updateIdea(idea.id, 'prioridad', e.target.value)}
+                                                                            className="bg-gray-100 text-black font-black text-[10px] px-4 py-2 rounded-full uppercase outline-none cursor-pointer"
+                                                                        >
                                                                             <option>Alta</option><option>Media</option><option>Baja</option>
                                                                         </select>
                                                                     </td>
                                                                     <td className="px-4 py-5 text-center">
                                                                         <select 
-                                                                            value={idea.estatus} 
+                                                                            value={idea.estatus}
                                                                             onChange={(e) => updateIdea(idea.id, 'estatus', e.target.value)}
                                                                             style={{ backgroundColor: idea.estatus === 'Completado' ? '#49d5ba' : idea.estatus === 'En progreso' ? '#facc15' : '#ff9500' }}
-                                                                            className="font-black text-[10px] px-5 py-2 rounded-full uppercase outline-none text-black"
+                                                                            className="font-black text-[10px] px-5 py-2 rounded-full uppercase outline-none cursor-pointer text-black"
                                                                         >
                                                                             <option>Pendiente</option><option>En progreso</option><option>Completado</option>
                                                                         </select>
@@ -394,7 +405,13 @@
                                                                             ))}
                                                                         </div>
                                                                     </td>
-                                                                    <td className="px-6 py-5"><input type="text" value={idea.fechaEstimada} onChange={(e) => updateIdea(idea.id, 'fechaEstimada', e.target.value)} placeholder="Día/Mes" className="w-full bg-[#f8f8f8] border-none rounded-xl px-4 py-2 text-[11px] font-bold outline-none text-center" /></td>
+                                                                    <td className="px-6 py-5">
+                                                                        <input 
+                                                                            type="text" value={idea.fechaEstimada} 
+                                                                            onChange={(e) => updateIdea(idea.id, 'fechaEstimada', e.target.value)}
+                                                                            placeholder="Día/Mes" 
+                                                                            className="w-full bg-[#f8f8f8] border-none rounded-xl px-4 py-2 text-[11px] font-bold outline-none text-center" />
+                                                                    </td>
                                                                     <td className="px-8 py-5 text-right"><button onClick={() => eliminarIdea(idea.id)} className="text-gray-200 hover:text-red-500"><Icon name="trash-2" size={14}/></button></td>
                                                                 </tr>
                                                             ))}
@@ -402,7 +419,7 @@
                                                     </table>
                                                 </div>
                                             </div>
-                                        );
+                                        )
                                     })}
                                 </section>
                             )}
@@ -410,14 +427,21 @@
                             {activeIdeaTab === 'config' && (
                                 <section className="max-w-2xl mx-auto animate-fade-in">
                                     <div className="bg-[#d9d9d9] rounded-[3rem] p-6 md:p-10 border border-black/5 shadow-lg">
-                                        <div className="flex items-center gap-4 mb-8"><div className="w-2 h-10 bg-black rounded-full"></div><h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">Canales Activos</h2></div>
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="w-2 h-10 bg-black rounded-full"></div>
+                                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">Canales Activos</h2>
+                                        </div>
                                         <div className="space-y-4 mb-10">
                                             {canales.map(c => (
                                                 <div key={c.id} className="bg-white p-6 rounded-[2rem] flex justify-between items-center group transition-all shadow-sm">
-                                                    <div className="flex items-center gap-4"><div className="w-12 h-12 bg-black text-[#49d5ba] rounded-2xl flex items-center justify-center font-black text-xl italic">{c.nombre.charAt(0)}</div><span className="font-black text-lg tracking-tight uppercase italic">{c.nombre}</span></div>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-12 h-12 bg-black text-[#49d5ba] rounded-2xl flex items-center justify-center font-black text-xl italic">{c.nombre.charAt(0)}</div>
+                                                        <span className="font-black text-lg tracking-tight uppercase italic">{c.nombre}</span>
+                                                    </div>
                                                     <button onClick={() => eliminarCanal(c.id, c.nombre)} className="text-gray-200 hover:text-red-500 transition-colors"><Icon name="trash-2" size={20}/></button>
                                                 </div>
                                             ))}
+                                            {canales.length === 0 && <p className="text-center py-10 opacity-30 font-black uppercase text-xs italic">No hay canales configurados</p>}
                                         </div>
                                         <button onClick={() => setShowModalCanal(true)} className="w-full bg-black text-[#49d5ba] font-black py-6 rounded-[2rem] text-lg shadow-xl flex items-center justify-center gap-3 italic uppercase active:scale-95 transition-all">
                                             <Icon name="plus" size={24} strokeWidth={3} /> Añadir Canal
@@ -427,23 +451,34 @@
                             )}
                         </main>
 
-                        {/* Modales - Conservan tu lógica original */}
+                        {/* Modales Idea Hub */}
                         {showModalIdea && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
                                 <div className="bg-white w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative animate-fade-in">
                                     <button onClick={() => setShowModalIdea(false)} className="absolute top-8 right-8 text-gray-400 hover:text-black transition-all"><Icon name="x" size={32}/></button>
-                                    <h2 className="text-4xl font-black italic uppercase leading-none mb-10">Nueva Idea</h2>
-                                    <form onSubmit={captarIdea} className="space-y-6">
-                                        <input name="titulo" required className="w-full bg-[#f8f8f8] border-2 border-transparent focus:border-[#49d5ba] rounded-2xl px-6 py-5 font-bold text-xl outline-none uppercase italic" placeholder="Concepto de Contenido" />
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <input name="urlRef" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="URL Referencia" />
-                                            <input name="urlObj" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="Muestra Visual" />
+                                    {canales.length === 0 ? (
+                                        <div className="text-center py-10">
+                                            <Icon name="radio" size={60} className="mx-auto text-gray-200 mb-6" />
+                                            <h3 className="text-2xl font-black uppercase mb-2 italic">Sin destinos</h3>
+                                            <p className="text-gray-400 text-xs font-bold mb-8 italic">Primero crea un canal en configuración.</p>
+                                            <button onClick={() => {setShowModalIdea(false); setActiveIdeaTab('config');}} className="bg-black text-[#49d5ba] px-8 py-4 rounded-2xl font-black uppercase text-xs italic active:scale-95 transition-all">Ir a Configuración</button>
                                         </div>
-                                        <select name="canalDestino" required className="w-full bg-black text-[#49d5ba] rounded-2xl px-6 py-5 font-black uppercase text-sm cursor-pointer outline-none">
-                                            {canales.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
-                                        </select>
-                                        <button type="submit" className="w-full bg-[#49d5ba] text-black font-black py-7 rounded-[2.5rem] text-2xl shadow-xl italic uppercase active:scale-[0.98] transition-all">Captar Idea</button>
-                                    </form>
+                                    ) : (
+                                        <>
+                                            <h2 className="text-4xl font-black italic uppercase leading-none mb-10">Nueva Idea</h2>
+                                            <form onSubmit={captarIdea} className="space-y-6">
+                                                <input name="titulo" required className="w-full bg-[#f8f8f8] border-2 border-transparent focus:border-[#49d5ba] rounded-2xl px-6 py-5 font-bold text-xl outline-none uppercase italic" placeholder="Concepto de Contenido" />
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <input name="urlRef" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="URL Referencia" />
+                                                    <input name="urlObj" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="Muestra Visual" />
+                                                </div>
+                                                <select name="canalDestino" required className="w-full bg-black text-[#49d5ba] rounded-2xl px-6 py-5 font-black uppercase text-sm cursor-pointer outline-none">
+                                                    {canales.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+                                                </select>
+                                                <button type="submit" className="w-full bg-[#49d5ba] text-black font-black py-7 rounded-[2.5rem] text-2xl shadow-xl italic uppercase active:scale-[0.98] transition-all">Captar Idea</button>
+                                            </form>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -466,6 +501,7 @@
                 );
             }
 
+            // --- VISTA CANAL RADAR (PUNTO B) (IDÉNTICA) ---
             if (currentView === 'canal-radar') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
@@ -496,9 +532,10 @@
                                                         <td className="px-8 py-5 font-black text-gray-900 text-sm italic uppercase">{r.idea}</td>
                                                         <td className="px-8 py-5 text-center"><a href={r.urlObjetivo} target="_blank" className="text-gray-200 hover:text-black transition-all"><i className="fa-solid fa-link text-lg"></i></a></td>
                                                         <td className="px-8 py-5"><span className="px-3 py-1 rounded-lg bg-gray-50 border border-gray-100 text-[10px] font-black text-gray-600 uppercase">{r.redSocial}</span></td>
-                                                        <td className="px-8 py-5 text-right"><button onClick={() => db.collection("radar").doc(r.id).delete()} className="text-gray-200 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash-can"></i></button></td>
+                                                        <td className="px-8 py-5 text-right"><button onClick={async () => await db.collection("radar").doc(r.id).delete()} className="text-gray-200 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash-can"></i></button></td>
                                                     </tr>
                                                 ))}
+                                                {registrosPuntoB.length === 0 && <tr><td colSpan="5" className="py-24 text-center opacity-10 font-black uppercase text-xs">Sin Registros</td></tr>}
                                             </tbody>
                                         </table>
                                     </div>
@@ -533,7 +570,7 @@
                             </section>
                         </main>
 
-                        {/* Modales Punto B - Conservan tu lógica original */}
+                        {/* Modales Punto B */}
                         {showModalPBRapido && (
                             <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
                                 <div className="bg-white w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl animate-fade-in">
