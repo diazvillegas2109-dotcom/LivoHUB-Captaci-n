@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livo Hub - Sistema de Captación</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Livo Hub">
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Urbanist:wght@600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-pb: #49d5ba;
+            --secondary-pb: #bbf4ed;
+            --bg-body: #f2f0f0;
+            --surface: #d9d9d9;
+            --text: #000000;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f2f0f0; }
+        .font-black { font-weight: 900; }
+        .italic { font-style: italic; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f2f0f0; }
+        ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #49d5ba; }
+
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-home-pill {
+            background-color: #000000; color: #ffffff; border-radius: 9999px;
+            padding: 1.25rem 2rem; font-weight: 900; font-style: italic;
+            text-transform: uppercase; font-size: 1.5rem; letter-spacing: -0.025em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2); width: 100%; max-width: 320px; text-align: center;
+        }
+        .btn-home-pill:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.3); filter: brightness(1.2); }
+        .btn-home-pill:active { transform: scale(0.96); }
+
+        .urbanist { font-family: 'Urbanist', sans-serif; }
+        .main-card-pb { background-color: var(--surface); border-radius: 1.5rem; border: 1px solid rgba(0, 0, 0, 0.03); }
+        .data-table-container-pb { background-color: #ffffff; border-radius: 1rem; overflow: hidden; }
+        .niche-tag-pb { font-size: 10px; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; font-weight: 700; background-color: var(--secondary-pb); color: #1f5a4e; border: 1px solid rgba(73, 213, 186, 0.2); }
+        .notepad-area-pb { background-color: #ffffff; background-image: linear-gradient(var(--bg-body) 1px, transparent 1px); background-size: 100% 2.5rem; line-height: 2.5rem; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- CONFIGURACIÓN DE FIREBASE (CON TUS CLAVES) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgVAAYURCEGdqNya8sizkV7ruL18zu10g",
+            authDomain: "livohub-e1cap.firebaseapp.com",
+            projectId: "livohub-e1cap",
+            storageBucket: "livohub-e1cap.firebasestorage.app",
+            messagingSenderId: "66423421771",
+            appId: "1:66423421771:web:d69e8178fa2dd0bd6bc6ce"
+        };
+
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.firestore();
+
+        const Icon = ({ name, size = 24, className = "", strokeWidth = 2, color = "currentColor" }) => {
+            useEffect(() => { if (window.lucide) lucide.createIcons(); }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size, strokeWidth: strokeWidth, color: color }}></i>;
+        };
+
+        const LivoLogo = ({ className = "h-48" }) => (
+            <svg viewBox="0 0 300 200" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+                <text x="20" y="120" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="110" fill="black" style={{ letterSpacing: '-5px' }}>L</text>
+                <text x="85" y="120" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="110" fill="black" style={{ letterSpacing: '-5px' }}>ı</text>
+                <circle cx="98" cy="45" r="14" fill="#00ead0" />
+                <text x="120" y="120" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="110" fill="black" style={{ letterSpacing: '-5px' }}>vo</text>
+                <text x="200" y="170" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="55" fill="#00ead0">mx</text>
+            </svg>
+        );
+
+        const App = () => {
+            const colors = { primaryPB: '#49d5ba', bg: '#f2f0f0', card: '#d9d9d9' };
+            const [currentView, setCurrentView] = useState('home');
+            const [canales, setCanales] = useState([]);
+            const [ideasGenerales, setIdeasGenerales] = useState([]);
+            const [registrosPuntoB, setRegistrosPuntoB] = useState([]);
+            const [activeIdeaTab, setActiveIdeaTab] = useState('captacion');
+            const [filtroCanalDestino, setFiltroCanalDestino] = useState('Todos');
+            const [showModalIdea, setShowModalIdea] = useState(false);
+            const [showModalCanal, setShowModalCanal] = useState(false);
+            const [showModalPBRapido, setShowModalPBRapido] = useState(false);
+            const [showModalPBDesarrollo, setShowModalPBDesarrollo] = useState(false);
+            const [showModalPBNotas, setShowModalPBNotas] = useState(false);
+            const [editItem, setEditItem] = useState(null);
+            const [notaActiva, setNotaActiva] = useState({ id: null, titulo: '', contenido: '' });
+
+            useEffect(() => {
+                const unsubCanales = db.collection("canales").onSnapshot(snap => setCanales(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                const unsubIdeas = db.collection("ideas").orderBy("fechaCreacion", "desc").onSnapshot(snap => setIdeasGenerales(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                const unsubRadar = db.collection("radar").onSnapshot(snap => setRegistrosPuntoB(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))));
+                return () => { unsubCanales(); unsubIdeas(); unsubRadar(); };
+            }, []);
+
+            const agregarCanal = async (e) => {
+                e.preventDefault(); const nombre = e.target.nuevoCanal.value.trim().toUpperCase();
+                if (!nombre) return; await db.collection("canales").add({ nombre }); e.target.reset(); setShowModalCanal(false);
+            };
+
+            const eliminarCanal = async (id, nombre) => { if (confirm(`¿Eliminar canal "${nombre}"?`)) await db.collection("canales").doc(id).delete(); };
+
+            const captarIdea = async (e) => {
+                e.preventDefault(); const formData = new FormData(e.target);
+                await db.collection("ideas").add({
+                    titulo: formData.get('titulo'), urlReferencia: formData.get('urlRef'), urlObjetivo: formData.get('urlObj'),
+                    canalDestino: formData.get('canalDestino'), prioridad: 'Media', estatus: 'Pendiente', formato: 'PD',
+                    fechaEstimada: '', fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                setShowModalIdea(false);
+            };
+
+            const updateIdea = async (id, key, value) => await db.collection("ideas").doc(id).update({ [key]: value });
+            const eliminarIdea = async (id) => { if (confirm('¿Eliminar esta idea?')) await db.collection("ideas").doc(id).delete(); };
+
+            const registrarPBRapido = async (e) => {
+                e.preventDefault(); const formData = new FormData(e.target);
+                await db.collection("radar").add({
+                    nicho: formData.get('nicho'), subnicho: formData.get('subnicho'), idea: formData.get('ideaCanal'),
+                    urlObjetivo: formData.get('urlObjetivo'), redSocial: formData.get('redSocial'), tono: 'Profundo', region: 'España', 
+                    escalabilidad: 3, monetizacion: 'Alta', prioridad: 'Media', estado: 'Idea', observaciones: ''
+                });
+                setShowModalPBRapido(false);
+            };
+
+            const guardarEdicionPB = async (e) => {
+                e.preventDefault(); const formData = new FormData(e.target);
+                await db.collection("radar").doc(editItem.id).update({ idea: formData.get('editIdea'), escalabilidad: parseInt(formData.get('escalabilidad')), estado: formData.get('estado') });
+                setShowModalPBDesarrollo(false);
+            };
+
+            const guardarNotaPB = async () => { await db.collection("radar").doc(notaActiva.id).update({ observaciones: notaActiva.contenido }); setShowModalPBNotas(false); };
+
+            if (currentView === 'home') {
+                return (
+                    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
+                        <div className="w-full flex flex-col items-center">
+                            <LivoLogo className="h-40 md:h-56 w-auto mb-4" />
+                            <h2 className="text-lg md:text-xl font-black uppercase italic tracking-[0.3em] text-gray-800 mb-10 text-center">ETAPA 1: CAPTACIÓN</h2>
+                            <div className="flex flex-col items-center gap-6 w-full">
+                                <button onClick={() => setCurrentView('idea-hub')} className="btn-home-pill">Idea</button>
+                                <button onClick={() => setCurrentView('canal-radar')} className="btn-home-pill">Canal</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (currentView === 'idea-hub') {
+                return (
+                    <div className="min-h-screen pb-20 animate-fade-in">
+                        <nav className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-40">
+                            <div className="max-w-[1600px] mx-auto flex justify-between items-center">
+                                <div className="flex items-center gap-4">
+                                    <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-gray-100 rounded-full text-black"><Icon name="chevron-left" strokeWidth={3} /></button>
+                                    <h1 className="text-2xl font-black tracking-tighter italic hidden sm:block">LIVO<span className="text-[#49d5ba] not-italic">HUB</span></h1>
+                                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                                        <button onClick={() => setActiveIdeaTab('captacion')} className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase ${activeIdeaTab === 'captacion' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}>1. Registro</button>
+                                        <button onClick={() => setActiveIdeaTab('gestion')} className={`px-3 py-2 rounded-lg text-[10px] font-black uppercase ${activeIdeaTab === 'gestion' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}>2. Plan</button>
+                                        <button onClick={() => setActiveIdeaTab('config')} className={`px-3 py-2 rounded-lg ${activeIdeaTab === 'config' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}><Icon name="settings" size={16} /></button>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowModalIdea(true)} className="bg-[#49d5ba] text-black font-black px-4 py-2 rounded-xl flex items-center gap-2 shadow-md active:scale-95"><Icon name="plus" size={18} strokeWidth={3} /><span className="hidden md:inline uppercase text-xs">Captar</span></button>
+                            </div>
+                        </nav>
+                        <main className="max-w-[1600px] mx-auto p-4 md:p-8">
+                            {activeIdeaTab === 'captacion' && (
+                                <div className="bg-[#d9d9d9] rounded-[2.5rem] p-6">
+                                    <div className="flex flex-wrap gap-2 mb-8 bg-white/40 p-2 rounded-2xl border border-white/60">
+                                        <button onClick={() => setFiltroCanalDestino('Todos')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase border ${filtroCanalDestino === 'Todos' ? 'bg-black text-[#49d5ba]' : 'bg-white text-gray-400'}`}>Todos</button>
+                                        {canales.map(c => <button key={c.id} onClick={() => setFiltroCanalDestino(c.nombre)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase border ${filtroCanalDestino === c.nombre ? 'bg-black text-[#49d5ba]' : 'bg-white text-gray-400'}`}>{c.nombre}</button>)}
+                                    </div>
+                                    <div className="bg-white rounded-3xl overflow-hidden shadow-inner overflow-x-auto">
+                                        <table className="w-full text-left text-sm min-w-[800px]">
+                                            <thead className="bg-gray-50 text-[10px] font-black uppercase text-gray-400"><tr><th className="px-8 py-5 text-black">Idea</th><th className="px-6 py-5 text-center">Ref</th><th className="px-6 py-5 text-center">Meta</th><th className="px-6 py-5 text-center">Canal</th><th className="px-8 py-5"></th></tr></thead>
+                                            <tbody className="divide-y divide-gray-50">
+                                                {(filtroCanalDestino === 'Todos' ? ideasGenerales : ideasGenerales.filter(i => i.canalDestino === filtroCanalDestino)).map(idea => (
+                                                    <tr key={idea.id} className="hover:bg-gray-50/80 group">
+                                                        <td className="px-8 py-5 font-bold uppercase italic">{idea.titulo}</td>
+                                                        <td className="px-6 py-5 text-center">{idea.urlReferencia && <a href={idea.urlReferencia} target="_blank"><Icon name="external-link" size={16} className="text-gray-300 hover:text-black mx-auto" /></a>}</td>
+                                                        <td className="px-6 py-5 text-center">{idea.urlObjetivo && <a href={idea.urlObjetivo} target="_blank"><Icon name="layout" size={16} className="text-gray-300 hover:text-[#49d5ba] mx-auto" /></a>}</td>
+                                                        <td className="px-6 py-5 text-center"><span className="bg-black text-[#49d5ba] px-3 py-1 rounded-full text-[9px] font-black uppercase">{idea.canalDestino}</span></td>
+                                                        <td className="px-8 py-5 text-right opacity-0 group-hover:opacity-100"><button onClick={() => eliminarIdea(idea.id)} className="text-gray-200 hover:text-red-500"><Icon name="trash-2" size={16} /></button></td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                            {activeIdeaTab === 'config' && (
+                                <div className="max-w-xl mx-auto bg-[#d9d9d9] p-8 rounded-[3rem]">
+                                    <h2 className="text-2xl font-black uppercase italic mb-6">Canales</h2>
+                                    <div className="space-y-3 mb-8">
+                                        {canales.map(c => <div key={c.id} className="bg-white p-4 rounded-2xl flex justify-between items-center"><span className="font-black uppercase italic">{c.nombre}</span><button onClick={() => eliminarCanal(c.id, c.nombre)} className="text-gray-200 hover:text-red-500"><Icon name="trash-2" size={18}/></button></div>)}
+                                    </div>
+                                    <button onClick={() => setShowModalCanal(true)} className="w-full bg-black text-[#49d5ba] font-black py-4 rounded-2xl flex items-center justify-center gap-2 italic uppercase active:scale-95"><Icon name="plus" size={20}/></button>
+                                </div>
+                            )}
+                        </main>
+                        {showModalIdea && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                                <div className="bg-white w-full max-w-xl rounded-[2.5rem] p-10 animate-fade-in relative">
+                                    <button onClick={() => setShowModalIdea(false)} className="absolute top-6 right-6 text-gray-400 hover:text-black"><Icon name="x" size={28}/></button>
+                                    <h2 className="text-3xl font-black italic uppercase mb-8">Captar Idea</h2>
+                                    <form onSubmit={captarIdea} className="space-y-4">
+                                        <input name="titulo" required className="w-full bg-gray-50 rounded-xl px-5 py-4 font-bold uppercase" placeholder="Título del Contenido" />
+                                        <input name="urlRef" className="w-full bg-gray-50 rounded-xl px-5 py-3 text-sm" placeholder="URL Referencia" />
+                                        <input name="urlObj" className="w-full bg-gray-50 rounded-xl px-5 py-3 text-sm" placeholder="Meta Visual" />
+                                        <select name="canalDestino" required className="w-full bg-black text-[#49d5ba] rounded-xl px-5 py-4 font-black uppercase outline-none">{canales.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}</select>
+                                        <button type="submit" className="w-full bg-[#49d5ba] text-black font-black py-5 rounded-2xl shadow-lg uppercase italic active:scale-95">Guardar Idea</button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                        {showModalCanal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                <div className="bg-white w-full max-w-sm rounded-[2.5rem] p-10 text-center animate-fade-in">
+                                    <h2 className="text-2xl font-black uppercase mb-6 italic">Nuevo Canal</h2>
+                                    <form onSubmit={agregarCanal}>
+                                        <input name="nuevoCanal" required className="w-full bg-gray-50 rounded-xl px-6 py-4 font-black uppercase text-center mb-6 outline-none" placeholder="EJ: YOUTUBE" />
+                                        <button type="submit" className="w-full bg-black text-[#49d5ba] font-black py-4 rounded-xl uppercase italic active:scale-95">Registrar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            if (currentView === 'canal-radar') {
+                return (
+                    <div className="min-h-screen pb-20 animate-fade-in">
+                        <header className="p-8 flex justify-between items-center max-w-[1600px] mx-auto">
+                            <div className="flex items-center gap-4">
+                                <button onClick={() => setCurrentView('home')} className="p-3 bg-white rounded-xl shadow-sm"><Icon name="chevron-left" strokeWidth={3} /></button>
+                                <h1 className="text-4xl font-black urbanist">PUNTO <span className="text-[#49d5ba]">B</span></h1>
+                            </div>
+                            <button onClick={() => setShowModalPBRapido(true)} className="bg-[#49d5ba] text-black px-6 py-3 rounded-xl font-bold shadow-md active:scale-95">+ CAPTURA</button>
+                        </header>
+                        <main className="max-w-[1600px] mx-auto px-4 md:px-8">
+                            <div className="bg-[#d9d9d9] p-6 rounded-3xl overflow-x-auto">
+                                <table className="w-full text-sm text-left bg-white rounded-2xl overflow-hidden">
+                                    <thead className="bg-gray-50 text-[9px] font-black uppercase text-gray-400"><tr><th className="px-6 py-4">Nicho</th><th className="px-6 py-4">Idea</th><th className="px-6 py-4 text-center">Ref</th><th className="px-6 py-4">Red</th><th className="px-6 py-4"></th></tr></thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {registrosPuntoB.map(r => (
+                                            <tr key={r.id} className="hover:bg-teal-50/20 transition-colors">
+                                                <td className="px-6 py-4 font-black uppercase text-xs">{r.nicho}</td>
+                                                <td className="px-6 py-4 font-black italic uppercase text-gray-900">{r.idea}</td>
+                                                <td className="px-6 py-4 text-center"><a href={r.urlObjetivo} target="_blank"><i className="fa-solid fa-link text-gray-300 hover:text-black"></i></a></td>
+                                                <td className="px-6 py-4"><span className="bg-gray-50 px-2 py-1 rounded text-[10px] font-black uppercase">{r.redSocial}</span></td>
+                                                <td className="px-6 py-4 text-right"><button onClick={() => db.collection("radar").doc(r.id).delete()} className="text-gray-200 hover:text-red-500"><i className="fa-solid fa-trash-can"></i></button></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </main>
+                        {showModalPBRapido && (
+                            <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+                                <div className="bg-white w-full max-w-xl rounded-[2.5rem] p-10 animate-fade-in relative">
+                                    <button onClick={() => setShowModalPBRapido(false)} className="absolute top-6 right-6 text-gray-400"><Icon name="x" size={24}/></button>
+                                    <h2 className="text-3xl font-black italic uppercase mb-6 urbanist">Radar</h2>
+                                    <form onSubmit={registrarPBRapido} className="grid grid-cols-2 gap-4">
+                                        <input name="nicho" required className="bg-gray-50 rounded-xl px-4 py-3 font-bold uppercase" placeholder="Nicho" />
+                                        <input name="subnicho" className="bg-gray-50 rounded-xl px-4 py-3 font-bold uppercase" placeholder="Subnicho" />
+                                        <input name="ideaCanal" required className="col-span-2 bg-gray-50 rounded-xl px-4 py-4 font-bold text-lg uppercase italic" placeholder="Idea Principal" />
+                                        <input name="urlObjetivo" type="url" className="bg-gray-50 rounded-xl px-4 py-3 text-xs" placeholder="URL Referencia" />
+                                        <select name="redSocial" className="bg-gray-50 rounded-xl px-4 py-3 font-bold uppercase"><option>YouTube</option><option>TikTok</option><option>Instagram</option></select>
+                                        <button type="submit" className="col-span-2 bg-[#49d5ba] text-black py-4 rounded-xl font-black shadow-lg uppercase italic active:scale-95">Registrar</button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+            return null;
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
