@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Livo Hub - Sistema de Captación</title>
 
+    <!-- IMPLEMENTACIÓN: PWA E ICONO -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,14 +13,17 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
+    <!-- Scripts de React, Babel y Tailwind -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- IMPLEMENTACIÓN: FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+    <!-- Iconos Lucide y FontAwesome -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Urbanist:wght@600;700;900&display=swap" rel="stylesheet">
@@ -40,7 +44,6 @@
         .font-black { font-weight: 900; }
         .italic { font-style: italic; }
         
-        /* Personalización de scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f2f0f0; }
         ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
@@ -52,7 +55,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilo Botones Home */
         .btn-home-pill {
             background-color: #000000;
             color: #ffffff;
@@ -76,7 +78,6 @@
         }
         .btn-home-pill:active { transform: scale(0.96); }
 
-        /* Estilos Punto B Integration */
         .urbanist { font-family: 'Urbanist', sans-serif; }
         .main-card-pb {
             background-color: var(--surface);
@@ -112,7 +113,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- IMPLEMENTACIÓN: FIREBASE CONFIG (TUS CLAVES) ---
+        // --- CONFIGURACIÓN DE FIREBASE ---
         const firebaseConfig = {
             apiKey: "AIzaSyBgVAAYURCEGdqNya8sizkV7ruL18zu10g",
             authDomain: "livohub-e1cap.firebaseapp.com",
@@ -154,22 +155,22 @@
 
             const [currentView, setCurrentView] = useState('home');
 
-            // --- ESTADOS (SINCRONIZADOS CON NUBE) ---
+            // --- ESTADOS SINCRONIZADOS ---
             const [canales, setCanales] = useState([]);
             const [ideasGenerales, setIdeasGenerales] = useState([]);
+            const [registrosPuntoB, setRegistrosPuntoB] = useState([]);
+            
             const [activeIdeaTab, setActiveIdeaTab] = useState('captacion');
             const [filtroCanalDestino, setFiltroCanalDestino] = useState('Todos');
             const [showModalIdea, setShowModalIdea] = useState(false);
             const [showModalCanal, setShowModalCanal] = useState(false);
-
-            const [registrosPuntoB, setRegistrosPuntoB] = useState([]);
             const [showModalPBRapido, setShowModalPBRapido] = useState(false);
             const [showModalPBDesarrollo, setShowModalPBDesarrollo] = useState(false);
             const [showModalPBNotas, setShowModalPBNotas] = useState(false);
             const [editItem, setEditItem] = useState(null);
             const [notaActiva, setNotaActiva] = useState({ id: null, titulo: '', contenido: '' });
 
-            // --- IMPLEMENTACIÓN: ESCUCHA REAL-TIME (FIREBASE) ---
+            // Persistencia en Tiempo Real (Firebase)
             useEffect(() => {
                 const unsubCanales = db.collection("canales").onSnapshot(snap => {
                     setCanales(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -183,7 +184,7 @@
                 return () => { unsubCanales(); unsubIdeas(); unsubRadar(); };
             }, []);
 
-            // --- FUNCIONES (ACTUALIZADAS PARA FIREBASE) ---
+            // --- FUNCIONES IDEA HUB ---
             const agregarCanal = async (e) => {
                 e.preventDefault();
                 const nombre = e.target.nuevoCanal.value.trim().toUpperCase();
@@ -194,9 +195,10 @@
             };
 
             const eliminarCanal = async (id, nombre) => {
-                if (confirm(`¿Eliminar el canal "${nombre}"?`)) {
-                    await db.collection("canales").doc(id).delete();
-                    if (filtroCanalDestino === nombre) setFiltroCanalDestino('Todos');
+                if (window.confirm(`¿Eliminar el canal "${nombre}"?`)) {
+                    try {
+                        await db.collection("canales").doc(id).delete();
+                    } catch (error) { console.error("Error al borrar canal:", error); }
                 }
             };
 
@@ -222,22 +224,29 @@
             };
 
             const eliminarIdea = async (id) => {
-                if (confirm('¿Eliminar esta idea definitivamente?')) {
-                    await db.collection("ideas").doc(id).delete();
+                if (window.confirm('¿Eliminar esta idea definitivamente?')) {
+                    try {
+                        await db.collection("ideas").doc(id).delete();
+                    } catch (error) { console.error("Error al borrar idea:", error); }
                 }
             };
 
+            // --- FUNCIONES PUNTO B ---
             const registrarPBRapido = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 await db.collection("radar").add({
+                    clave: formData.get('clave') || '',
                     nicho: formData.get('nicho'),
                     subnicho: formData.get('subnicho'),
+                    micronicho: formData.get('micronicho') || '',
+                    nanonicho: formData.get('nanonicho') || '',
                     idea: formData.get('ideaCanal'),
                     urlObjetivo: formData.get('urlObjetivo'),
                     redSocial: formData.get('redSocial'),
-                    tono: 'Profundo', region: 'España/Latam', 
-                    escalabilidad: 3, monetizacion: 'Alta', prioridad: 'Media', estado: 'Idea',
+                    formato: 'videos largos',
+                    tono: 'Profundo', region: 'España/Latam', publico: '',
+                    escalabilidad: 3, competencia: 3, monetizacion: 'media', prioridad: 'media', estado: 'Idea',
                     observaciones: ''
                 });
                 setShowModalPBRapido(false);
@@ -247,14 +256,35 @@
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 await db.collection("radar").doc(editItem.id).update({
+                    clave: formData.get('editClave'),
+                    nicho: formData.get('editNicho'),
+                    subnicho: formData.get('editSubnicho'),
+                    micronicho: formData.get('editMicronicho'),
+                    nanonicho: formData.get('editNanonicho'),
                     idea: formData.get('editIdea'),
-                    escalabilidad: parseInt(formData.get('escalabilidad')),
-                    estado: formData.get('estado')
+                    urlObjetivo: formData.get('editUrl'),
+                    redSocial: formData.get('editRed'),
+                    formato: formData.get('editFormato'),
+                    region: formData.get('editRegion'),
+                    publico: formData.get('editPublico'),
+                    escalabilidad: parseInt(formData.get('editEscalabilidad')),
+                    competencia: parseInt(formData.get('editCompetencia')),
+                    monetizacion: formData.get('editMonetizacion'),
+                    prioridad: formData.get('editPrioridad'),
+                    estado: formData.get('editEstado')
                 });
                 setShowModalPBDesarrollo(false);
             };
 
-            // --- VISTA HOME (IDÉNTICA) ---
+            const eliminarRegistroRadar = async (id, idea) => {
+                if (window.confirm(`¿Eliminar definitivamente el registro "${idea}"?`)) {
+                    try {
+                        await db.collection("radar").doc(id).delete();
+                    } catch (error) { console.error("Error al borrar registro de radar:", error); }
+                }
+            };
+
+            // --- VISTAS ---
             if (currentView === 'home') {
                 return (
                     <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
@@ -272,7 +302,6 @@
                 );
             }
 
-            // --- VISTA IDEA HUB (IDÉNTICA) ---
             if (currentView === 'idea-hub') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
@@ -343,7 +372,6 @@
                                                             </td>
                                                         </tr>
                                                     ))}
-                                                    {ideasGenerales.length === 0 && <tr><td colSpan="5" className="py-20 text-center opacity-10 font-black uppercase text-xs">Sin ideas registradas</td></tr>}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -353,9 +381,7 @@
 
                             {activeIdeaTab === 'gestion' && (
                                 <section className="space-y-10 animate-fade-in">
-                                    {canales.length === 0 ? (
-                                        <div className="text-center py-20 opacity-20 font-black uppercase italic">Crea canales en configuración primero</div>
-                                    ) : canales.map(canal => {
+                                    {canales.map(canal => {
                                         const ideasCanal = ideasGenerales.filter(i => i.canalDestino === canal.nombre);
                                         return (
                                             <div key={canal.id} className="bg-[#d9d9d9] rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-sm">
@@ -405,13 +431,7 @@
                                                                             ))}
                                                                         </div>
                                                                     </td>
-                                                                    <td className="px-6 py-5">
-                                                                        <input 
-                                                                            type="text" value={idea.fechaEstimada} 
-                                                                            onChange={(e) => updateIdea(idea.id, 'fechaEstimada', e.target.value)}
-                                                                            placeholder="Día/Mes" 
-                                                                            className="w-full bg-[#f8f8f8] border-none rounded-xl px-4 py-2 text-[11px] font-bold outline-none text-center" />
-                                                                    </td>
+                                                                    <td className="px-6 py-5"><input type="text" value={idea.fechaEstimada} onChange={(e) => updateIdea(idea.id, 'fechaEstimada', e.target.value)} placeholder="Día/Mes" className="w-full bg-[#f8f8f8] border-none rounded-xl px-4 py-2 text-[11px] font-bold outline-none text-center" /></td>
                                                                     <td className="px-8 py-5 text-right"><button onClick={() => eliminarIdea(idea.id)} className="text-gray-200 hover:text-red-500"><Icon name="trash-2" size={14}/></button></td>
                                                                 </tr>
                                                             ))}
@@ -441,7 +461,6 @@
                                                     <button onClick={() => eliminarCanal(c.id, c.nombre)} className="text-gray-200 hover:text-red-500 transition-colors"><Icon name="trash-2" size={20}/></button>
                                                 </div>
                                             ))}
-                                            {canales.length === 0 && <p className="text-center py-10 opacity-30 font-black uppercase text-xs italic">No hay canales configurados</p>}
                                         </div>
                                         <button onClick={() => setShowModalCanal(true)} className="w-full bg-black text-[#49d5ba] font-black py-6 rounded-[2rem] text-lg shadow-xl flex items-center justify-center gap-3 italic uppercase active:scale-95 transition-all">
                                             <Icon name="plus" size={24} strokeWidth={3} /> Añadir Canal
@@ -456,29 +475,18 @@
                             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
                                 <div className="bg-white w-full max-w-2xl rounded-[3rem] p-8 md:p-12 shadow-2xl relative animate-fade-in">
                                     <button onClick={() => setShowModalIdea(false)} className="absolute top-8 right-8 text-gray-400 hover:text-black transition-all"><Icon name="x" size={32}/></button>
-                                    {canales.length === 0 ? (
-                                        <div className="text-center py-10">
-                                            <Icon name="radio" size={60} className="mx-auto text-gray-200 mb-6" />
-                                            <h3 className="text-2xl font-black uppercase mb-2 italic">Sin destinos</h3>
-                                            <p className="text-gray-400 text-xs font-bold mb-8 italic">Primero crea un canal en configuración.</p>
-                                            <button onClick={() => {setShowModalIdea(false); setActiveIdeaTab('config');}} className="bg-black text-[#49d5ba] px-8 py-4 rounded-2xl font-black uppercase text-xs italic active:scale-95 transition-all">Ir a Configuración</button>
+                                    <h2 className="text-4xl font-black italic uppercase leading-none mb-10">Nueva Idea</h2>
+                                    <form onSubmit={captarIdea} className="space-y-6">
+                                        <input name="titulo" required className="w-full bg-[#f8f8f8] border-2 border-transparent focus:border-[#49d5ba] rounded-2xl px-6 py-5 font-bold text-xl outline-none uppercase italic" placeholder="Concepto de Contenido" />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <input name="urlRef" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="URL Referencia" />
+                                            <input name="urlObj" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="Muestra Visual" />
                                         </div>
-                                    ) : (
-                                        <>
-                                            <h2 className="text-4xl font-black italic uppercase leading-none mb-10">Nueva Idea</h2>
-                                            <form onSubmit={captarIdea} className="space-y-6">
-                                                <input name="titulo" required className="w-full bg-[#f8f8f8] border-2 border-transparent focus:border-[#49d5ba] rounded-2xl px-6 py-5 font-bold text-xl outline-none uppercase italic" placeholder="Concepto de Contenido" />
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <input name="urlRef" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="URL Referencia" />
-                                                    <input name="urlObj" className="bg-[#f8f8f8] rounded-2xl px-6 py-4 outline-none text-sm font-medium" placeholder="Muestra Visual" />
-                                                </div>
-                                                <select name="canalDestino" required className="w-full bg-black text-[#49d5ba] rounded-2xl px-6 py-5 font-black uppercase text-sm cursor-pointer outline-none">
-                                                    {canales.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
-                                                </select>
-                                                <button type="submit" className="w-full bg-[#49d5ba] text-black font-black py-7 rounded-[2.5rem] text-2xl shadow-xl italic uppercase active:scale-[0.98] transition-all">Captar Idea</button>
-                                            </form>
-                                        </>
-                                    )}
+                                        <select name="canalDestino" required className="w-full bg-black text-[#49d5ba] rounded-2xl px-6 py-5 font-black uppercase text-sm cursor-pointer outline-none">
+                                            {canales.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+                                        </select>
+                                        <button type="submit" className="w-full bg-[#49d5ba] text-black font-black py-7 rounded-[2.5rem] text-2xl shadow-xl italic uppercase active:scale-[0.98] transition-all">Captar Idea</button>
+                                    </form>
                                 </div>
                             </div>
                         )}
@@ -501,7 +509,6 @@
                 );
             }
 
-            // --- VISTA CANAL RADAR (PUNTO B) (IDÉNTICA) ---
             if (currentView === 'canal-radar') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
@@ -509,7 +516,7 @@
                             <div className="flex items-center gap-6">
                                 <button onClick={() => setCurrentView('home')} className="p-4 bg-white hover:bg-gray-100 rounded-2xl shadow-sm transition-all text-black"><Icon name="chevron-left" strokeWidth={3} /></button>
                                 <div>
-                                    <h1 className="text-5xl font-black tracking-tighter urbanist">PUNTO <span style={{color: colors.primaryPB}}>B</span></h1>
+                                    <h1 className="text-5xl font-black tracking-tighter urbanist uppercase">PUNTO <span style={{color: colors.primaryPB}}>B</span></h1>
                                     <p className="text-gray-500 font-semibold text-lg">Sistema Central de Captación & Análisis</p>
                                 </div>
                             </div>
@@ -517,50 +524,96 @@
                         </header>
 
                         <main className="max-w-[1600px] mx-auto p-4 md:p-8">
+                            {/* TABLA 1: GENERAL */}
                             <section className="mb-10">
                                 <div className="main-card-pb p-6 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full" style={{backgroundColor: colors.primaryPB}}></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700">1. Radar de Ideas Rápido</h2></div>
-                                    <div className="data-table-container-pb shadow-sm border border-black/5">
-                                        <table className="w-full text-sm text-left">
+                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full" style={{backgroundColor: colors.primaryPB}}></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700 italic font-black">1. Tabla General</h2></div>
+                                    <div className="data-table-container-pb shadow-sm border border-black/5 overflow-x-auto">
+                                        <table className="w-full text-sm text-left min-w-[1200px]">
                                             <thead>
-                                                <tr className="text-gray-400 uppercase text-[9px] font-black tracking-widest bg-[#f8f8f8]"><th className="px-8 py-5">Jerarquía</th><th className="px-8 py-5">Concepto</th><th className="px-8 py-5 text-center">Benchmark</th><th className="px-8 py-5">Red / Formato</th><th className="px-8 py-5 text-right">Borrar</th></tr>
+                                                <tr className="text-gray-400 uppercase text-[9px] font-black tracking-widest bg-[#f8f8f8]">
+                                                    <th className="px-6 py-5">Identificador/Código/Clave</th>
+                                                    <th className="px-6 py-5">Nicho</th>
+                                                    <th className="px-6 py-5">Subnicho</th>
+                                                    <th className="px-6 py-5">Micronicho</th>
+                                                    <th className="px-6 py-5">Nanonicho</th>
+                                                    <th className="px-6 py-5">Idea del canal</th>
+                                                    <th className="px-6 py-5">URL contenido/canal</th>
+                                                    <th className="px-6 py-5">Red social principal</th>
+                                                    <th className="px-6 py-5">Formato</th>
+                                                    <th className="px-6 py-5 text-right">Borrar</th>
+                                                </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
                                                 {registrosPuntoB.map(r => (
                                                     <tr key={r.id} className="hover:bg-teal-50/30 transition-colors">
-                                                        <td className="px-8 py-5"><div className="font-black text-[10px] uppercase">{r.nicho}</div><div className="text-[9px] text-gray-400 font-bold">{r.subnicho}</div></td>
-                                                        <td className="px-8 py-5 font-black text-gray-900 text-sm italic uppercase">{r.idea}</td>
-                                                        <td className="px-8 py-5 text-center"><a href={r.urlObjetivo} target="_blank" className="text-gray-200 hover:text-black transition-all"><i className="fa-solid fa-link text-lg"></i></a></td>
-                                                        <td className="px-8 py-5"><span className="px-3 py-1 rounded-lg bg-gray-50 border border-gray-100 text-[10px] font-black text-gray-600 uppercase">{r.redSocial}</span></td>
-                                                        <td className="px-8 py-5 text-right"><button onClick={async () => await db.collection("radar").doc(r.id).delete()} className="text-gray-200 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash-can"></i></button></td>
+                                                        <td className="px-6 py-5 font-black text-xs">{r.clave || 'S/C'}</td>
+                                                        <td className="px-6 py-5"><span className="niche-tag-pb">{r.nicho}</span></td>
+                                                        <td className="px-6 py-5 font-bold text-gray-400 text-[10px] uppercase">{r.subnicho}</td>
+                                                        <td className="px-6 py-5 font-bold text-gray-400 text-[10px] uppercase">{r.micronicho || '-'}</td>
+                                                        <td className="px-6 py-5 font-bold text-gray-400 text-[10px] uppercase">{r.nanonicho || '-'}</td>
+                                                        <td className="px-6 py-5 font-black text-gray-900 text-sm italic uppercase">{r.idea}</td>
+                                                        <td className="px-6 py-5 text-center">{r.urlObjetivo && <a href={r.urlObjetivo} target="_blank" className="text-gray-300 hover:text-black transition-all"><i className="fa-solid fa-link text-lg"></i></a>}</td>
+                                                        <td className="px-6 py-5"><span className="px-3 py-1 rounded-lg bg-gray-50 border border-gray-100 text-[10px] font-black text-gray-600 uppercase">{r.redSocial}</span></td>
+                                                        <td className="px-6 py-5 font-bold text-[10px] uppercase text-gray-400">{r.formato}</td>
+                                                        <td className="px-6 py-5 text-right"><button onClick={() => eliminarRegistroRadar(r.id, r.idea)} className="text-gray-200 hover:text-red-500 transition-colors"><i className="fa-solid fa-trash-can"></i></button></td>
                                                     </tr>
                                                 ))}
-                                                {registrosPuntoB.length === 0 && <tr><td colSpan="5" className="py-24 text-center opacity-10 font-black uppercase text-xs">Sin Registros</td></tr>}
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </section>
 
+                            {/* TABLA 2: PARTICULAR */}
                             <section>
                                 <div className="main-card-pb p-6 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full bg-black"></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700">2. Análisis & Profundización</h2></div>
+                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full bg-black"></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700 italic font-black">2. Tabla Particular</h2></div>
                                     <div className="data-table-container-pb shadow-sm border border-black/5 overflow-x-auto">
-                                        <table className="w-full text-[11px] text-left">
+                                        <table className="w-full text-[11px] text-left min-w-[1800px]">
                                             <thead>
-                                                <tr className="text-gray-400 uppercase font-black tracking-widest text-[9px] bg-[#f8f8f8]"><th className="px-8 py-5">Identificación</th><th className="px-6 py-5">Atributos</th><th className="px-6 py-5 text-center">Escalabilidad</th><th className="px-6 py-5">Rentabilidad</th><th className="px-6 py-5">Prioridad</th><th className="px-6 py-5">Estado</th><th className="px-6 py-5 text-center">Notas</th><th className="px-8 py-5 text-right">Acción</th></tr>
+                                                <tr className="text-gray-400 uppercase font-black tracking-widest text-[9px] bg-[#f8f8f8]">
+                                                    <th className="px-6 py-5">Identificador/Código/Clave</th>
+                                                    <th className="px-4 py-5">Nicho</th>
+                                                    <th className="px-4 py-5">Subnicho</th>
+                                                    <th className="px-4 py-5">Micronicho</th>
+                                                    <th className="px-4 py-5">Nanonicho</th>
+                                                    <th className="px-4 py-5">Idea del canal</th>
+                                                    <th className="px-4 py-5">URL contenido/canal</th>
+                                                    <th className="px-4 py-5">Red social principal</th>
+                                                    <th className="px-4 py-5">Formato</th>
+                                                    <th className="px-4 py-5">Región</th>
+                                                    <th className="px-4 py-5">Público</th>
+                                                    <th className="px-4 py-5 text-center">Escalabilidad(1-5)</th>
+                                                    <th className="px-4 py-5 text-center">Competencia(1-5)</th>
+                                                    <th className="px-4 py-5">Monetización</th>
+                                                    <th className="px-4 py-5">Prioridad</th>
+                                                    <th className="px-4 py-5">Estado</th>
+                                                    <th className="px-4 py-5 text-center">Notas</th>
+                                                    <th className="px-6 py-5 text-right">Acción</th>
+                                                </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
                                                 {registrosPuntoB.map(r => (
                                                     <tr key={r.id} className="hover:bg-teal-50/30">
-                                                        <td className="px-8 py-5"><div className="font-black text-gray-900 uppercase">{r.idea}</div><div className="flex gap-1 mt-1"><span className="niche-tag-pb">{r.nicho}</span></div></td>
-                                                        <td className="px-6 py-5 font-bold text-gray-400 text-[9px] uppercase tracking-tighter">{r.tono} / {r.region}</td>
-                                                        <td className="px-6 py-5 text-center text-yellow-500 text-sm">{'★'.repeat(r.escalabilidad)}</td>
-                                                        <td className="px-6 py-5 font-black" style={{color: colors.primaryPB}}>$$ {r.monetizacion}</td>
-                                                        <td className="px-6 py-5"><span className="px-2 py-0.5 rounded-md bg-gray-50 border border-gray-100 font-black text-gray-500 text-[9px] uppercase">{r.prioridad}</span></td>
-                                                        <td className="px-6 py-5"><span className="flex items-center gap-1 font-black text-[9px] uppercase"><i className="fa-solid fa-circle text-[5px]" style={{color: colors.primaryPB}}></i> {r.estado}</span></td>
-                                                        <td className="px-6 py-5 text-center"><button onClick={() => { setNotaActiva({id: r.id, titulo: r.idea, contenido: r.observaciones}); setShowModalPBNotas(true); }} className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${r.observaciones ? 'bg-black text-white' : 'bg-gray-50 text-gray-200 border border-gray-100'}`}><i className="fa-solid fa-pen-nib"></i></button></td>
-                                                        <td className="px-8 py-5 text-right"><button onClick={() => { setEditItem(r); setShowModalPBDesarrollo(true); }} className="text-[9px] font-black px-5 py-2 rounded-xl border-2 border-black hover:bg-black hover:text-white transition-all uppercase tracking-widest">Ajustes</button></td>
+                                                        <td className="px-6 py-5 font-black text-gray-900">{r.clave || 'S/C'}</td>
+                                                        <td className="px-4 py-5"><span className="niche-tag-pb">{r.nicho}</span></td>
+                                                        <td className="px-4 py-5 font-bold text-gray-400 uppercase">{r.subnicho}</td>
+                                                        <td className="px-4 py-5 font-bold text-gray-400 uppercase">{r.micronicho || '-'}</td>
+                                                        <td className="px-4 py-5 font-bold text-gray-400 uppercase">{r.nanonicho || '-'}</td>
+                                                        <td className="px-4 py-5 font-black text-gray-900 uppercase italic">{r.idea}</td>
+                                                        <td className="px-4 py-5 text-center">{r.urlObjetivo && <a href={r.urlObjetivo} target="_blank" className="text-gray-300 hover:text-black"><i className="fa-solid fa-link text-lg"></i></a>}</td>
+                                                        <td className="px-4 py-5"><span className="px-2 py-1 rounded bg-gray-50 text-[9px] font-black uppercase">{r.redSocial}</span></td>
+                                                        <td className="px-4 py-5 uppercase font-bold text-gray-400">{r.formato}</td>
+                                                        <td className="px-4 py-5 uppercase font-bold text-gray-400">{r.region}</td>
+                                                        <td className="px-4 py-5 uppercase font-bold text-gray-400">{r.publico || '-'}</td>
+                                                        <td className="px-4 py-5 text-center text-yellow-500 text-sm">{'★'.repeat(r.escalabilidad)}</td>
+                                                        <td className="px-4 py-5 text-center text-red-400 text-sm">{'★'.repeat(r.competencia || 1)}</td>
+                                                        <td className="px-4 py-5 font-black uppercase" style={{color: colors.primaryPB}}>{r.monetizacion || 'media'}</td>
+                                                        <td className="px-4 py-5 font-black uppercase text-gray-400">{r.prioridad || 'media'}</td>
+                                                        <td className="px-4 py-5"><span className="flex items-center gap-1 font-black text-[9px] uppercase"><i className="fa-solid fa-circle text-[5px]" style={{color: colors.primaryPB}}></i> {r.estado}</span></td>
+                                                        <td className="px-4 py-5 text-center"><button onClick={() => { setNotaActiva({id: r.id, titulo: r.idea, contenido: r.observaciones}); setShowModalPBNotas(true); }} className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${r.observaciones ? 'bg-black text-white' : 'bg-gray-50 text-gray-200 border border-gray-100'}`}><i className="fa-solid fa-pen-nib"></i></button></td>
+                                                        <td className="px-6 py-5 text-right"><button onClick={() => { setEditItem(r); setShowModalPBDesarrollo(true); }} className="text-[9px] font-black px-4 py-1.5 rounded-lg border-2 border-black hover:bg-black hover:text-white transition-all uppercase tracking-widest">Ajustes</button></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -576,12 +629,15 @@
                                 <div className="bg-white w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl animate-fade-in">
                                     <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-black italic uppercase urbanist">Nueva Idea Radar</h2><button onClick={() => setShowModalPBRapido(false)} className="text-gray-300 hover:text-black transition-all"><i className="fa-solid fa-circle-xmark text-3xl"></i></button></div>
                                     <form onSubmit={registrarPBRapido} className="grid grid-cols-2 gap-5">
+                                        <input name="clave" className="col-span-2 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-sm" placeholder="Identificador/Código/Clave" />
                                         <input name="nicho" required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-sm" placeholder="Nicho General" />
                                         <input name="subnicho" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-sm" placeholder="Subnicho" />
+                                        <input name="micronicho" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-sm" placeholder="Micronicho" />
+                                        <input name="nanonicho" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-sm" placeholder="Nanonicho" />
                                         <input name="ideaCanal" required className="col-span-2 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-lg outline-none uppercase italic" placeholder="Idea del Canal" />
-                                        <input name="urlObjetivo" type="url" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none text-xs" placeholder="URL Referencia" />
-                                        <select name="redSocial" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none"><option>YouTube</option><option>TikTok</option><option>Instagram</option></select>
-                                        <button type="submit" className="col-span-2 py-5 rounded-2xl text-lg font-black mt-4 shadow-xl active:scale-95 transition-all" style={{backgroundColor: colors.primaryPB}}>REGISTRAR EN RADAR</button>
+                                        <input name="urlObjetivo" type="url" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none text-xs" placeholder="URL Contenido/Canal" />
+                                        <select name="redSocial" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-bold text-xs uppercase"><option>YouTube</option><option>Instagram</option><option>Facebook</option><option>TikTok</option></select>
+                                        <button type="submit" className="col-span-2 py-5 rounded-2xl text-lg font-black mt-4 shadow-xl active:scale-95 transition-all uppercase italic" style={{backgroundColor: colors.primaryPB}}>Registrar en Radar</button>
                                     </form>
                                 </div>
                             </div>
@@ -589,13 +645,39 @@
 
                         {showModalPBDesarrollo && editItem && (
                             <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
-                                <div className="bg-white w-full max-w-3xl rounded-[2.5rem] p-10 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
-                                    <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-black uppercase urbanist">Ficha Técnica</h2><button onClick={() => setShowModalPBDesarrollo(false)} className="text-gray-300 hover:text-black"><i className="fa-solid fa-circle-xmark text-3xl"></i></button></div>
-                                    <form onSubmit={guardarEdicionPB} className="grid grid-cols-2 gap-6">
-                                        <input name="editIdea" defaultValue={editItem.idea} className="col-span-2 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-2xl font-black outline-none uppercase italic" />
-                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Escalabilidad (1-5)</label><input name="escalabilidad" type="number" min="1" max="5" defaultValue={editItem.escalabilidad} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-bold" /></div>
-                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Estado</label><select name="estado" defaultValue={editItem.estado} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-bold text-xs"><option>Idea</option><option>Validando</option><option>Aperturado</option></select></div>
-                                        <button type="submit" className="col-span-2 w-full py-5 rounded-2xl text-xl font-black shadow-lg mt-4 active:scale-95 transition-all uppercase italic" style={{backgroundColor: colors.primaryPB}}>Guardar Análisis</button>
+                                <div className="bg-white w-full max-w-4xl rounded-[2.5rem] p-10 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+                                    <div className="flex justify-between items-center mb-8"><h2 className="text-3xl font-black uppercase urbanist italic">Centro de Ajustes Maestro</h2><button onClick={() => setShowModalPBDesarrollo(false)} className="text-gray-300 hover:text-black"><i className="fa-solid fa-circle-xmark text-3xl"></i></button></div>
+                                    <form onSubmit={guardarEdicionPB} className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                        
+                                        <div className="col-span-full bg-gray-100 p-4 rounded-2xl mb-2"><h3 className="font-black uppercase text-[10px] tracking-widest text-gray-500">Datos Principales (Ambas Tablas)</h3></div>
+                                        
+                                        <div className="col-span-full md:col-span-1"><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Identificador / Clave</label><input name="editClave" defaultValue={editItem.clave} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-black outline-none uppercase" /></div>
+                                        <div className="col-span-full md:col-span-2"><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Idea del Canal</label><input name="editIdea" defaultValue={editItem.idea} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-lg font-black outline-none uppercase italic" /></div>
+                                        
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Nicho</label><input name="editNicho" defaultValue={editItem.nicho} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold uppercase" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Subnicho</label><input name="editSubnicho" defaultValue={editItem.subnicho} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold uppercase" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Micronicho</label><input name="editMicronicho" defaultValue={editItem.micronicho} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold uppercase" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Nanonicho</label><input name="editNanonicho" defaultValue={editItem.nanonicho} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold uppercase" /></div>
+                                        
+                                        <div className="col-span-full md:col-span-2"><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">URL Contenido/Canal</label><input name="editUrl" defaultValue={editItem.urlObjetivo} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs outline-none" /></div>
+                                        
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Red Social</label><select name="editRed" defaultValue={editItem.redSocial} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-black text-xs uppercase"><option>YouTube</option><option>Instagram</option><option>Facebook</option><option>TikTok</option></select></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Formato</label><select name="editFormato" defaultValue={editItem.formato || 'videos largos'} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-black text-xs uppercase"><option>videos largos</option><option>shorts</option></select></div>
+                                        
+                                        <div className="col-span-full bg-gray-100 p-4 rounded-2xl mt-4 mb-2"><h3 className="font-black uppercase text-[10px] tracking-widest text-gray-500">Datos Particulares (Análisis)</h3></div>
+                                        
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Región</label><input name="editRegion" defaultValue={editItem.region} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs uppercase font-bold" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Público</label><input name="editPublico" defaultValue={editItem.publico} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs uppercase font-bold" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Estado</label><select name="editEstado" defaultValue={editItem.estado} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none uppercase font-black text-xs"><option>Idea</option><option>En evaluación</option><option>Validado</option><option>En proceso</option><option>Aperturado</option></select></div>
+                                        
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Escalabilidad (1-5)</label><input name="editEscalabilidad" type="number" min="1" max="5" defaultValue={editItem.escalabilidad} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-bold" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Competencia (1-5)</label><input name="editCompetencia" type="number" min="1" max="5" defaultValue={editItem.competencia || 3} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-bold" /></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Monetización</label><select name="editMonetizacion" defaultValue={editItem.monetizacion || 'media'} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-black text-xs uppercase"><option>baja</option><option>media</option><option>alta</option></select></div>
+                                        <div><label className="block text-[10px] font-black text-gray-400 mb-1 uppercase">Prioridad</label><select name="editPrioridad" defaultValue={editItem.prioridad || 'media'} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-black text-xs uppercase"><option>baja</option><option>media</option><option>alta</option></select></div>
+
+                                        <div className="col-span-full">
+                                            <button type="submit" className="w-full py-6 rounded-3xl text-xl font-black shadow-lg mt-4 active:scale-95 transition-all uppercase italic" style={{backgroundColor: colors.primaryPB}}>Guardar Todas las Modificaciones</button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -612,7 +694,12 @@
                                         <textarea className="w-full h-96 notepad-area-pb text-xl text-gray-800 border-none focus:ring-0 resize-none font-medium outline-none" placeholder="Describe aquí la estrategia de contenido..." value={notaActiva.contenido} onChange={(e) => setNotaActiva({...notaActiva, contenido: e.target.value})}></textarea>
                                     </div>
                                     <div className="p-10 bg-[#f8f8f8] flex justify-end">
-                                        <button onClick={async () => { await db.collection("radar").doc(notaActiva.id).update({observaciones: notaActiva.contenido}); setShowModalPBNotas(false); }} className="px-16 py-5 rounded-3xl text-xl font-black shadow-xl active:scale-95 transition-all uppercase italic" style={{backgroundColor: colors.primaryPB}}>Guardar Bloc</button>
+                                        <button onClick={async () => { 
+                                            try {
+                                                await db.collection("radar").doc(notaActiva.id).update({observaciones: notaActiva.contenido}); 
+                                                setShowModalPBNotas(false); 
+                                            } catch (error) { console.error("Error al guardar notas:", error); }
+                                        }} className="px-16 py-5 rounded-3xl text-xl font-black shadow-xl active:scale-95 transition-all uppercase italic" style={{backgroundColor: colors.primaryPB}}>Guardar Bloc</button>
                                     </div>
                                 </div>
                             </div>
