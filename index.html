@@ -23,87 +23,223 @@
     <!-- Iconos Lucide y FontAwesome -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Urbanist:wght@600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Urbanist:wght@600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,700;0,9..40,900;1,9..40,700;1,9..40,900&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --primary-pb: #49d5ba;
             --secondary-pb: #bbf4ed;
-            --bg-body: #f2f0f0;
-            --surface: #d9d9d9;
+            --bg-body: #eeecec;
+            --surface: #e0dcdc;
             --text: #000000;
+            --accent: #49d5ba;
         }
-
+        *, *::before, *::after { box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f2f0f0;
+            font-family: 'DM Sans', 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            -webkit-font-smoothing: antialiased;
         }
         .font-black { font-weight: 900; }
         .italic { font-style: italic; }
-        
-        /* Personalización de scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f2f0f0; }
-        ::-webkit-scrollbar-thumb { background: #d9d9d9; border-radius: 10px; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c0bcbc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #49d5ba; }
 
-        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-fade-in { animation: fadeIn 0.55s cubic-bezier(0.22,1,0.36,1) both; }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilo Botones Home */
+        /* ── HOME: editorial byxp ── */
+        .home-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-body);
+        }
+        .home-header {
+            padding: 1.75rem 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .home-cards-grid {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (min-width: 768px) {
+            .home-cards-grid { flex-direction: row; }
+        }
+        .home-nav-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 3rem 2.5rem 2.5rem;
+            cursor: pointer;
+            transition: background-color 0.28s ease;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+        }
+        @media (min-width: 768px) {
+            .home-nav-card {
+                border-bottom: none;
+                border-right: 1px solid rgba(0,0,0,0.08);
+            }
+            .home-nav-card:last-child { border-right: none; }
+        }
+        .home-nav-card:hover { background-color: #000; }
+        .home-nav-card:hover .card-eyebrow { color: rgba(255,255,255,0.35); }
+        .home-nav-card:hover .card-title { color: #fff; }
+        .home-nav-card:hover .card-subtitle-accent { color: var(--accent); }
+        .home-nav-card:hover .card-desc { color: rgba(255,255,255,0.45); }
+        .home-nav-card:hover .card-arrow { background-color: var(--accent); color: #000; }
+        .home-nav-card:active { opacity: 0.92; }
+
+        .card-eyebrow {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.35);
+            transition: color 0.28s;
+            margin-bottom: 1.25rem;
+        }
+        .card-top-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-title {
+            font-family: 'DM Sans', sans-serif;
+            font-size: clamp(3.5rem, 9vw, 6rem);
+            font-weight: 900;
+            line-height: 0.88;
+            letter-spacing: -0.04em;
+            text-transform: uppercase;
+            color: #000;
+            transition: color 0.28s;
+        }
+        .card-subtitle-accent {
+            font-family: 'DM Sans', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+            color: var(--accent);
+            transition: color 0.28s;
+            margin-top: 0.5rem;
+        }
+        .card-desc {
+            font-size: 0.8rem;
+            font-weight: 500;
+            line-height: 1.55;
+            color: rgba(0,0,0,0.4);
+            transition: color 0.28s;
+            margin-top: 1.5rem;
+            max-width: 300px;
+        }
+        .card-arrow {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.28s;
+            flex-shrink: 0;
+        }
+        .card-bottom-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 3rem;
+        }
+        .card-step-badge {
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.2);
+            transition: color 0.28s;
+        }
+        .home-nav-card:hover .card-step-badge { color: rgba(255,255,255,0.25); }
+
+        /* ── NAVIGATION INTERNA ── */
         .btn-home-pill {
-            background-color: #000000;
-            color: #ffffff;
+            background-color: #000;
+            color: #fff;
             border-radius: 9999px;
             padding: 1.25rem 2rem;
             font-weight: 900;
             font-style: italic;
             text-transform: uppercase;
-            font-size: 1.5rem; 
+            font-size: 1.5rem;
             letter-spacing: -0.025em;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
             width: 100%;
             max-width: 320px;
             text-align: center;
         }
-        .btn-home-pill:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.3);
-            filter: brightness(1.2);
-        }
+        .btn-home-pill:hover { transform: translateY(-2px); filter: brightness(1.2); }
         .btn-home-pill:active { transform: scale(0.96); }
 
-        /* Estilos Punto B Integration */
-        .urbanist { font-family: 'Urbanist', sans-serif; }
+        /* ── MODULOS SECCIÓN (Idea Hub / Canal) ── */
+        .urbanist { font-family: 'Urbanist', 'DM Sans', sans-serif; }
         .main-card-pb {
             background-color: var(--surface);
-            border-radius: 1.5rem;
-            border: 1px solid rgba(0, 0, 0, 0.03);
+            border-radius: 1.25rem;
+            border: 1px solid rgba(0,0,0,0.04);
         }
         .data-table-container-pb {
-            background-color: #ffffff;
-            border-radius: 1rem;
+            background-color: rgba(255,255,255,0.6);
+            border-radius: 0.75rem;
             overflow: hidden;
         }
         .niche-tag-pb {
-            font-size: 10px;
-            padding: 2px 8px;
+            font-size: 9px;
+            padding: 3px 8px;
             border-radius: 9999px;
             text-transform: uppercase;
             font-weight: 700;
+            letter-spacing: 0.08em;
             background-color: var(--secondary-pb);
             color: #1f5a4e;
-            border: 1px solid rgba(73, 213, 186, 0.2);
         }
         .notepad-area-pb {
             background-color: #ffffff;
             background-image: linear-gradient(var(--bg-body) 1px, transparent 1px);
             background-size: 100% 2.5rem;
             line-height: 2.5rem;
+        }
+
+        /* ── MÓDULO HEADER EDITORIAL ── */
+        .module-eyebrow {
+            font-size: 0.58rem;
+            font-weight: 700;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.35);
+        }
+        .module-eyebrow-accent {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .module-eyebrow-accent::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--accent);
         }
     </style>
 </head>
@@ -264,15 +400,53 @@
             // --- VISTA HOME ---
             if (currentView === 'home') {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
-                        <div className="w-full flex flex-col items-center">
-                            <LivoLogo className="h-40 md:h-56 w-auto mb-4" />
-                            <h2 className="text-lg md:text-xl font-black uppercase italic tracking-[0.3em] text-gray-800 mb-10 text-center">
-                                ETAPA 1: CAPTACIÓN
-                            </h2>
-                            <div className="flex flex-col items-center gap-6 w-full">
-                                <button onClick={() => setCurrentView('idea-hub')} className="btn-home-pill">Idea</button>
-                                <button onClick={() => setCurrentView('canal-radar')} className="btn-home-pill">Canal</button>
+                    <div className="home-wrapper animate-fade-in">
+                        {/* Header */}
+                        <header className="home-header">
+                            <LivoLogo className="h-10 md:h-12 w-auto" />
+                            <span className="module-eyebrow">Etapa 1 — Captación</span>
+                        </header>
+
+                        {/* Cards grid */}
+                        <div className="home-cards-grid" style={{flex: 1}}>
+                            {/* IDEA card */}
+                            <div className="home-nav-card" onClick={() => setCurrentView('idea-hub')}>
+                                <div>
+                                    <p className="card-eyebrow">Módulo 01</p>
+                                    <div className="card-top-row">
+                                        <div>
+                                            <div className="card-title">Idea</div>
+                                            <div className="card-subtitle-accent">Hub</div>
+                                        </div>
+                                        <div className="card-arrow">
+                                            <Icon name="arrow-right" size={16} strokeWidth={2.5} />
+                                        </div>
+                                    </div>
+                                    <p className="card-desc">Captura, organiza y planifica cada concepto de contenido por canal destino.</p>
+                                </div>
+                                <div className="card-bottom-row">
+                                    <span className="card-step-badge">Registro · Gestión · Config</span>
+                                </div>
+                            </div>
+
+                            {/* CANAL card */}
+                            <div className="home-nav-card" onClick={() => setCurrentView('canal-radar')}>
+                                <div>
+                                    <p className="card-eyebrow">Módulo 02</p>
+                                    <div className="card-top-row">
+                                        <div>
+                                            <div className="card-title">Canal</div>
+                                            <div className="card-subtitle-accent">Radar</div>
+                                        </div>
+                                        <div className="card-arrow">
+                                            <Icon name="arrow-right" size={16} strokeWidth={2.5} />
+                                        </div>
+                                    </div>
+                                    <p className="card-desc">Analiza nichos, captura canales potenciales y evalúa su monetización y escala.</p>
+                                </div>
+                                <div className="card-bottom-row">
+                                    <span className="card-step-badge">Punto B · Análisis · Estrategia</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -283,23 +457,25 @@
             if (currentView === 'idea-hub') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
-                        <nav className="bg-white border-b border-gray-200 px-4 md:px-8 py-3 sticky top-0 z-40">
-                            <div className="max-w-[1600px] mx-auto flex justify-between items-center">
-                                <div className="flex items-center gap-4 md:gap-12">
-                                    <button onClick={() => setCurrentView('home')} className="p-2 hover:bg-gray-100 rounded-full transition-all text-black">
-                                        <Icon name="chevron-left" strokeWidth={3} />
+                        <nav style={{background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.08)', padding:'0.75rem 1.5rem', position:'sticky', top:0, zIndex:40}}>
+                            <div style={{maxWidth:'1600px', margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'1rem'}}>
+                                <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                    <button onClick={() => setCurrentView('home')} style={{padding:'0.5rem', borderRadius:'9999px', border:'1px solid rgba(0,0,0,0.1)', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', color:'#000'}}>
+                                        <Icon name="chevron-left" size={18} strokeWidth={2.5} />
                                     </button>
-                                    <h1 className="text-2xl md:text-3xl font-black tracking-tighter italic leading-none hidden sm:block">
-                                        LIVO<span className="text-[#49d5ba] not-italic">HUB</span>
-                                    </h1>
-                                    <div className="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200 overflow-x-auto">
-                                        <button onClick={() => setActiveIdeaTab('captacion')} className={`px-3 md:px-6 py-2 rounded-lg text-[10px] md:text-xs font-black uppercase transition-all ${activeIdeaTab === 'captacion' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}>1. Registro Maestro</button>
-                                        <button onClick={() => setActiveIdeaTab('gestion')} className={`px-3 md:px-6 py-2 rounded-lg text-[10px] md:text-xs font-black uppercase transition-all ${activeIdeaTab === 'gestion' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}>2. Planificación</button>
-                                        <button onClick={() => setActiveIdeaTab('config')} className={`px-3 py-2 rounded-lg transition-all ${activeIdeaTab === 'config' ? 'bg-white shadow-md text-black' : 'text-gray-400'}`}><Icon name="settings" size={16} /></button>
+                                    <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}>
+                                        <span style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.3)'}}>IDEA</span>
+                                        <span style={{width:4, height:4, borderRadius:'50%', background:'var(--accent)', display:'inline-block'}}></span>
+                                        <span style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.3)'}}>HUB</span>
+                                    </div>
+                                    <div style={{display:'flex', background:'rgba(0,0,0,0.05)', padding:'4px', borderRadius:'10px', gap:'2px', overflowX:'auto'}}>
+                                        <button onClick={() => setActiveIdeaTab('captacion')} style={{padding:'0.35rem 0.9rem', borderRadius:'7px', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', cursor:'pointer', border:'none', transition:'all 0.2s', background: activeIdeaTab === 'captacion' ? '#fff' : 'transparent', color: activeIdeaTab === 'captacion' ? '#000' : 'rgba(0,0,0,0.35)', boxShadow: activeIdeaTab === 'captacion' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none'}}>Registro</button>
+                                        <button onClick={() => setActiveIdeaTab('gestion')} style={{padding:'0.35rem 0.9rem', borderRadius:'7px', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', cursor:'pointer', border:'none', transition:'all 0.2s', background: activeIdeaTab === 'gestion' ? '#fff' : 'transparent', color: activeIdeaTab === 'gestion' ? '#000' : 'rgba(0,0,0,0.35)', boxShadow: activeIdeaTab === 'gestion' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none'}}>Planificación</button>
+                                        <button onClick={() => setActiveIdeaTab('config')} style={{padding:'0.35rem 0.6rem', borderRadius:'7px', fontSize:'0.6rem', fontWeight:700, cursor:'pointer', border:'none', transition:'all 0.2s', background: activeIdeaTab === 'config' ? '#fff' : 'transparent', color: activeIdeaTab === 'config' ? '#000' : 'rgba(0,0,0,0.35)', boxShadow: activeIdeaTab === 'config' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', display:'flex', alignItems:'center'}}><Icon name="settings" size={14} /></button>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowModalIdea(true)} className="bg-[#49d5ba] text-black font-black px-4 md:px-8 py-3 rounded-2xl flex items-center gap-2 transition-all shadow-lg active:scale-95">
-                                    <Icon name="plus" size={18} strokeWidth={3} /> <span className="hidden md:inline uppercase text-xs">Captar Idea</span>
+                                <button onClick={() => setShowModalIdea(true)} style={{background:'#000', color:'var(--accent)', fontWeight:900, fontSize:'0.65rem', letterSpacing:'0.15em', textTransform:'uppercase', padding:'0.6rem 1.25rem', borderRadius:'9999px', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:'0.4rem', transition:'all 0.2s', flexShrink:0}}>
+                                    <Icon name="plus" size={14} strokeWidth={3} /> <span className="hidden md:inline">Captar Idea</span>
                                 </button>
                             </div>
                         </nav>
@@ -307,17 +483,19 @@
                         <main className="max-w-[1600px] mx-auto p-4 md:p-8">
                             {activeIdeaTab === 'captacion' && (
                                 <section className="space-y-6 animate-fade-in">
-                                    <div className="bg-[#d9d9d9] rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-sm border border-black/5">
-                                        <div className="flex flex-col gap-6 mb-8">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-2 h-8 bg-black rounded-full"></div>
-                                                <h2 className="text-xl font-black uppercase tracking-tight italic">Ecosistema Livo</h2>
+                                    <div style={{background:'var(--surface)', borderRadius:'1.25rem', padding:'1.5rem', border:'1px solid rgba(0,0,0,0.05)'}}>
+                                        <div className="flex flex-col gap-4 mb-6">
+                                            <div className="flex items-center justify-between flex-wrap gap-4">
+                                                <div>
+                                                    <p style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)', marginBottom:'0.3rem'}}>Registro Maestro</p>
+                                                    <h2 className="text-xl font-black uppercase tracking-tight" style={{letterSpacing:'-0.03em'}}>Ecosistema Livo</h2>
+                                                </div>
                                             </div>
-                                            <div className="bg-white/40 p-2 rounded-[1.5rem] flex flex-wrap gap-2 items-center border border-white/60 shadow-inner overflow-x-auto custom-scrollbar">
-                                                <div className="px-4 py-2 flex items-center gap-2 text-black/40"><Icon name="filter" size={14} /><span className="text-[9px] font-black uppercase tracking-widest">Canal:</span></div>
-                                                <button onClick={() => setFiltroCanalDestino('Todos')} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all border ${filtroCanalDestino === 'Todos' ? 'bg-black text-[#49d5ba]' : 'bg-white text-gray-400 border-gray-100'}`}>Todo el Contenido</button>
+                                            <div style={{display:'flex', flexWrap:'wrap', gap:'0.4rem', alignItems:'center', overflowX:'auto', paddingBottom:'0.25rem'}}>
+                                                <span style={{fontSize:'0.55rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.3)', marginRight:'0.25rem', flexShrink:0}}>Canal ·</span>
+                                                <button onClick={() => setFiltroCanalDestino('Todos')} style={{padding:'0.4rem 1rem', borderRadius:'9999px', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border: filtroCanalDestino === 'Todos' ? '1.5px solid #000' : '1.5px solid rgba(0,0,0,0.12)', background: filtroCanalDestino === 'Todos' ? '#000' : 'rgba(255,255,255,0.7)', color: filtroCanalDestino === 'Todos' ? 'var(--accent)' : 'rgba(0,0,0,0.4)', cursor:'pointer', transition:'all 0.2s', flexShrink:0}}>Todo</button>
                                                 {canales.map(c => (
-                                                    <button key={c.id} onClick={() => setFiltroCanalDestino(c.nombre)} className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all border ${filtroCanalDestino === c.nombre ? 'bg-black text-[#49d5ba]' : 'bg-white text-gray-400 border-gray-100'}`}>{c.nombre}</button>
+                                                    <button key={c.id} onClick={() => setFiltroCanalDestino(c.nombre)} style={{padding:'0.4rem 1rem', borderRadius:'9999px', fontSize:'0.6rem', fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', border: filtroCanalDestino === c.nombre ? '1.5px solid #000' : '1.5px solid rgba(0,0,0,0.12)', background: filtroCanalDestino === c.nombre ? '#000' : 'rgba(255,255,255,0.7)', color: filtroCanalDestino === c.nombre ? 'var(--accent)' : 'rgba(0,0,0,0.4)', cursor:'pointer', transition:'all 0.2s', flexShrink:0}}>{c.nombre}</button>
                                                 ))}
                                             </div>
                                         </div>
@@ -358,16 +536,19 @@
                             )}
 
                             {activeIdeaTab === 'gestion' && (
-                                <section className="space-y-10 animate-fade-in">
+                                <section className="space-y-6 animate-fade-in">
                                     {canales.length === 0 ? (
                                         <div className="text-center py-20 opacity-20 font-black uppercase italic">Crea canales en configuración primero</div>
                                     ) : canales.map(canal => {
                                         const ideasCanal = ideasGenerales.filter(i => i.canalDestino === canal.nombre);
                                         return (
-                                            <div key={canal.id} className="bg-[#d9d9d9] rounded-[2rem] md:rounded-[2.5rem] p-4 md:p-8 shadow-sm">
-                                                <div className="flex items-center gap-4 mb-6">
-                                                    <div className="w-12 h-12 bg-black text-[#49d5ba] rounded-2xl flex items-center justify-center font-black text-xl italic">{canal.nombre.charAt(0)}</div>
-                                                    <h2 className="text-2xl font-black uppercase tracking-tight italic">{canal.nombre}</h2>
+                                            <div key={canal.id} style={{background:'var(--surface)', borderRadius:'1.25rem', padding:'1.5rem', border:'1px solid rgba(0,0,0,0.05)'}}>
+                                                <div style={{display:'flex', alignItems:'center', gap:'1rem', marginBottom:'1.25rem', paddingBottom:'1rem', borderBottom:'1px solid rgba(0,0,0,0.07)'}}>
+                                                    <div style={{width:40, height:40, background:'#000', color:'var(--accent)', borderRadius:'10px', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900, fontSize:'1rem', flexShrink:0}}>{canal.nombre.charAt(0)}</div>
+                                                    <div>
+                                                        <span style={{fontSize:'0.55rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)'}}>Canal Activo</span>
+                                                        <h2 style={{fontFamily:"'DM Sans',sans-serif", fontSize:'1.2rem', fontWeight:900, letterSpacing:'-0.03em', textTransform:'uppercase', color:'#000'}}>{canal.nombre}</h2>
+                                                    </div>
                                                 </div>
                                                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-inner overflow-x-auto">
                                                     <table className="w-full text-left min-w-[900px]">
@@ -432,10 +613,10 @@
 
                             {activeIdeaTab === 'config' && (
                                 <section className="max-w-2xl mx-auto animate-fade-in">
-                                    <div className="bg-[#d9d9d9] rounded-[3rem] p-6 md:p-10 border border-black/5 shadow-lg">
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className="w-2 h-10 bg-black rounded-full"></div>
-                                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">Canales Activos</h2>
+                                    <div style={{background:"var(--surface)", borderRadius:"1.25rem", padding:"1.75rem", border:"1px solid rgba(0,0,0,0.05)"}}>
+                                        <div style={{marginBottom:'2rem'}}>
+                                            <span style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)'}}>Configuración</span>
+                                            <h2 style={{fontFamily:"'DM Sans',sans-serif", fontSize:'1.75rem', fontWeight:900, letterSpacing:'-0.04em', textTransform:'uppercase', color:'#000', marginTop:'0.2rem'}}>Canales Activos</h2>
                                         </div>
                                         <div className="space-y-4 mb-10">
                                             {canales.map(c => (
@@ -498,22 +679,32 @@
             if (currentView === 'canal-radar') {
                 return (
                     <div className="min-h-screen pb-20 animate-fade-in">
-                        <header className="px-8 py-10 flex flex-col md:flex-row justify-between items-end md:items-center gap-4 max-w-[1600px] mx-auto">
-                            <div className="flex items-center gap-6">
-                                <button onClick={() => setCurrentView('home')} className="p-4 bg-white hover:bg-gray-100 rounded-2xl shadow-sm transition-all text-black"><Icon name="chevron-left" strokeWidth={3} /></button>
-                                <div>
-                                    <h1 className="text-5xl font-black tracking-tighter urbanist">PUNTO <span style={{color: colors.primaryPB}}>B</span></h1>
-                                    <p className="text-gray-500 font-semibold text-lg">Sistema Central de Captación & Análisis</p>
+                        <header style={{background:'#fff', borderBottom:'1px solid rgba(0,0,0,0.08)', padding:'0.75rem 1.5rem', position:'sticky', top:0, zIndex:40}}>
+                            <div style={{maxWidth:'1600px', margin:'0 auto', display:'flex', justifyContent:'space-between', alignItems:'center', gap:'1rem'}}>
+                                <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                    <button onClick={() => setCurrentView('home')} style={{padding:'0.5rem', borderRadius:'9999px', border:'1px solid rgba(0,0,0,0.1)', background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', color:'#000'}}>
+                                        <Icon name="chevron-left" size={18} strokeWidth={2.5} />
+                                    </button>
+                                    <div style={{display:'flex', alignItems:'center', gap:'0.4rem'}}>
+                                        <span style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.3)'}}>CANAL</span>
+                                        <span style={{width:4, height:4, borderRadius:'50%', background:'var(--accent)', display:'inline-block'}}></span>
+                                        <span style={{fontSize:'0.58rem', fontWeight:700, letterSpacing:'0.2em', textTransform:'uppercase', color:'rgba(0,0,0,0.3)'}}>RADAR</span>
+                                    </div>
                                 </div>
+                                <button onClick={() => setShowModalPBRapido(true)} style={{background:'#000', color:'var(--accent)', fontWeight:900, fontSize:'0.65rem', letterSpacing:'0.15em', textTransform:'uppercase', padding:'0.6rem 1.25rem', borderRadius:'9999px', border:'none', cursor:'pointer', display:'flex', alignItems:'center', gap:'0.4rem', transition:'all 0.2s', flexShrink:0}}>
+                                    <Icon name="plus" size={14} strokeWidth={3} /> <span>Nueva Captura</span>
+                                </button>
                             </div>
-                            <button onClick={() => setShowModalPBRapido(true)} className="px-10 py-5 rounded-2xl flex items-center gap-3 text-lg font-bold shadow-sm hover:translate-y-[-2px] transition-all" style={{backgroundColor: colors.primaryPB}}><i className="fa-solid fa-plus-circle"></i> NUEVA CAPTURA</button>
                         </header>
 
                         <main className="max-w-[1600px] mx-auto p-4 md:p-8">
                             {/* TABLA 1: GENERAL */}
                             <section className="mb-10">
                                 <div className="main-card-pb p-6 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full" style={{backgroundColor: colors.primaryPB}}></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700">1. General</h2></div>
+                                    <div style={{marginBottom:'1.25rem', paddingBottom:'1rem', borderBottom:'1px solid rgba(0,0,0,0.06)'}}>
+                                        <span style={{fontSize:'0.55rem', fontWeight:700, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)'}}>Tabla 01</span>
+                                        <h2 style={{fontFamily:"'DM Sans',sans-serif", fontSize:'1.25rem', fontWeight:900, letterSpacing:'-0.03em', textTransform:'uppercase', color:'#000', marginTop:'0.2rem'}}>General</h2>
+                                    </div>
                                     <div className="data-table-container-pb shadow-sm border border-black/5 overflow-x-auto">
                                         <table className="w-full text-sm text-left min-w-[1000px]">
                                             <thead>
@@ -554,7 +745,10 @@
                             {/* TABLA 2: PARTICULAR */}
                             <section>
                                 <div className="main-card-pb p-6 shadow-sm">
-                                    <div className="flex items-center gap-3 mb-6 px-2"><div className="w-1.5 h-6 rounded-full bg-black"></div><h2 className="text-lg font-bold uppercase tracking-widest text-gray-700">2. Análisis Particular</h2></div>
+                                    <div style={{marginBottom:'1.25rem', paddingBottom:'1rem', borderBottom:'1px solid rgba(0,0,0,0.06)'}}>
+                                        <span style={{fontSize:'0.55rem', fontWeight:700, letterSpacing:'0.25em', textTransform:'uppercase', color:'rgba(0,0,0,0.35)'}}>Tabla 02</span>
+                                        <h2 style={{fontFamily:"'DM Sans',sans-serif", fontSize:'1.25rem', fontWeight:900, letterSpacing:'-0.03em', textTransform:'uppercase', color:'#000', marginTop:'0.2rem'}}>Análisis Particular</h2>
+                                    </div>
                                     <div className="data-table-container-pb shadow-sm border border-black/5 overflow-x-auto">
                                         <table className="w-full text-[11px] text-left min-w-[1500px]">
                                             <thead>
